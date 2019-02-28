@@ -179,6 +179,101 @@ this.setState({refresh: !this.state.refresh});
       }
     });
   }
+  
+  
+  
+  images = () => {
+    console.log("Images");
+    this.setState({
+      loading: true
+    });
+    AsyncStorage.getItem("id").then(id => {
+      NetInfo.isConnected.fetch().then(isConnected => {
+        if (isConnected) {
+          var Request = {
+            security:"1",
+            order_id: this.props.navigation.state.params.data.id,
+            orderno: this.props.navigation.state.params.data.orderno,
+            user_id: id,
+
+          };
+          console.log("URL", Config.orderimages);
+          console.log("Request", Request);
+          timeout(
+            20000,
+            fetch(Config.orderimages, {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                security:"1",
+                order_id: this.props.navigation.state.params.data.id,
+                orderno: this.props.navigation.state.params.data.orderno,
+                user_id: id,
+              })
+            })
+              .then(res => res.json())
+              .then(res => {
+                this.setState({
+                  loading: false
+                });
+                console.log("RESPONCE::: ", res);
+                if (res.status == "success") {
+                this.setState({ImageSource :  res.data[0].images, verifyImage: res})
+this.showRemarks();
+                } else {
+                  this.setState({
+                    loading: false
+                  });
+                    this.setState({ImageSource :  res, verifyImage:res});
+                    this.showRemarks();
+                }
+                if (res.status == "failed") {
+                  this.setState({
+                    loading: false
+                  });
+                  this.showRemarks();
+                }
+              })
+              .catch(e => {
+                console.log(e);
+                this.setState({
+                  loading: false
+                });
+                this.showRemarks();
+                this.refs.toastWithStyle.show(
+                  "Something went wrong...",
+                  1500
+                );
+              })
+          ).catch(e => {
+            console.log(e);
+            this.setState({
+              loading: false
+            });
+
+            this.refs.toastWithStyle.show(
+              "Please check your internet connection...",
+              1500
+            );
+          });
+        } else {
+          this.setState({
+            loading: false
+          });
+          this.refs.toastWithStyle.show(
+            "Please check your internet connection...",
+            1500
+          );
+        }
+      });
+    });
+
+  }
+  
+  
   render() {
     return (
       <View style={styles.container} refresh={this.state.refresh}>
